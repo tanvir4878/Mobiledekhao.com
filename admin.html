@@ -1,0 +1,57 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MobileDekhao Admin</title>
+<style>
+:root{--bg:#f3f4fb;--cd:#fff;--tx:#12142b;--mu:#69708f;--p:#5b3df5;--bd:#e3e6f3}
+@media(prefers-color-scheme:dark){:root{--bg:#0c0e1f;--cd:#171a33;--tx:#eef0ff;--mu:#98a0c8;--bd:#292d4f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,sans-serif}
+header{background:linear-gradient(90deg,#1b1255,#5b3df5);color:#fff;padding:14px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+header b{font-size:18px;flex:1}.w{max-width:960px;margin:auto;padding:16px}
+.bx{background:var(--cd);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:16px}
+h2{margin:0 0 10px;font-size:18px}.r{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:600px){.r{grid-template-columns:1fr}}
+label{font-size:12px;font-weight:700;color:var(--mu);display:block;margin-top:4px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:9px;background:var(--bg);color:var(--tx);font:inherit}
+button{border:0;border-radius:9px;padding:9px 16px;font-weight:700;cursor:pointer;background:var(--p);color:#fff}button.o{background:var(--bg);color:var(--tx);border:1px solid var(--bd)}button.d{background:#e11d48}button.go{background:#16a34a}
+.t{display:flex;gap:6px}.t button{background:#ffffff26}.t button.on{background:#fff;color:var(--p)}
+table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid var(--bd);text-align:left}
+.pv{width:80px;height:100px;object-fit:contain;border:1px dashed var(--bd);border-radius:8px;display:none;margin-top:8px}
+#msg{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 18px;border-radius:20px;display:none;z-index:9;max-width:90%}
+.sc{overflow-x:auto}.hint{font-size:13px;color:var(--mu)}
+</style></head><body>
+<header><b>📱 MobileDekhao Admin</b><div class="t"><button id="t1" onclick="tab(1)">Phones</button><button id="t2" onclick="tab(2)">Updates</button></div><button class="go" onclick="publish()">💾 Save & Publish</button></header>
+<div class="w" id="app"></div><div id="msg"></div>
+<script>
+const $=s=>document.querySelector(s),E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let PW='';try{PW=sessionStorage.getItem('pw')||''}catch(e){}
+let P=[],U=[],cur=1,edit=-1,pend='',dirty=false;
+const msg=(t,ms=3500)=>{const m=$('#msg');m.textContent=t;m.style.display='block';clearTimeout(msg.i);msg.i=setTimeout(()=>m.style.display='none',ms)};
+const post=async(p,b)=>{const r=await fetch('/api/'+p,{method:'POST',headers:{'x-admin-password':PW,'content-type':'application/json'},body:JSON.stringify(b||{})});const j=await r.json().catch(()=>({error:'Server error. Is the site deployed on Netlify?'}));if(!r.ok)throw new Error(j.error||r.status);return j};
+async function login(){PW=$('#pw').value;try{await post('login');try{sessionStorage.setItem('pw',PW)}catch(e){}await load();draw()}catch(e){msg('❌ '+e.message,6000)}}
+async function load(){try{const d=await (await fetch('/api/data')).json();if(d.init){P=d.phones;U=d.updates}else{P=(await (await fetch('/phones.json')).json()).phones;U=(await (await fetch('/updates.json')).json()).updates}}catch(e){msg('Could not load data')}}
+async function publish(){msg('⏳ Saving…',30000);try{for(const p of P){if(p._img){p.img=(await post('img',{data:p._img})).url;delete p._img}}await post('save',{phones:P,updates:U});dirty=false;msg('🎉 Published! Your website is updated now.',5000);draw()}catch(e){msg('❌ '+e.message,7000)}}
+function tab(n){cur=n;edit=-1;pend='';draw()}
+const F=['name','brand','price','status','net','ram','storage','date','display','chipset','camera','battery','os'];
+function draw(){const a=$('#app');if(!PW||a.dataset.lock){}
+if(!PW){document.querySelector('header .t').style.display='none';document.querySelector('header .go').style.display='none';a.innerHTML=`<div class="bx" style="max-width:360px;margin:40px auto"><h2>🔐 Admin Login</h2><input id="pw" type="password" placeholder="Admin password" onkeydown="if(event.key=='Enter')login()"><p><button style="width:100%" onclick="login()">Login</button></p></div>`;return}
+document.querySelector('header .t').style.display='';document.querySelector('header .go').style.display='';[1,2].forEach(i=>$('#t'+i).className=i==cur?'on':'');
+if(cur==1){a.innerHTML=`<div class="bx"><h2>${edit<0?'Add New Phone':'Edit Phone'}</h2><div class="r">
+<div><label>Phone Name *</label><input id="f_name"></div><div><label>Brand *</label><input id="f_brand"></div>
+<div><label>Price (৳) *</label><input id="f_price" type="number"></div><div><label>Status</label><select id="f_status"><option>Available</option><option>Upcoming</option><option>Discontinued</option></select></div>
+<div><label>Network</label><select id="f_net"><option>5G</option><option>4G</option></select></div><div><label>Release Date</label><input id="f_date" type="date"></div>
+<div><label>RAM (GB)</label><input id="f_ram" type="number"></div><div><label>Storage (GB)</label><input id="f_storage" type="number"></div>
+<div><label>Display</label><input id="f_display"></div><div><label>Chipset</label><input id="f_chipset"></div>
+<div><label>Camera</label><input id="f_camera"></div><div><label>Battery</label><input id="f_battery"></div>
+<div><label>OS</label><input id="f_os"></div><div><label>Phone Image</label><input type="file" accept="image/*" onchange="pick(this)"></div></div>
+<label><input type="checkbox" id="f_hot" style="width:auto"> Show in Featured on home page</label><img id="pv" class="pv">
+<p><button onclick="savePhone()">➕ Add / Update Phone</button> <button class="o" onclick="tab(1)">Clear</button></p><p class="hint">After adding, click the green <b>Save &amp; Publish</b> button on top.</p></div>
+<div class="bx sc"><h2>All Phones (${P.length})</h2><table><tr><th>Phone</th><th>Price</th><th>Status</th><th></th></tr>${P.map((p,i)=>`<tr><td>${E(p.brand)} ${E(p.name)}</td><td>৳${Number(p.price).toLocaleString()}</td><td>${E(p.status)}</td><td style="white-space:nowrap"><button class="o" onclick="ed(${i})">Edit</button> <button class="d" onclick="del(${i})">Delete</button></td></tr>`).join('')}</table></div>`;
+if(edit>=0){F.forEach(k=>$('#f_'+k).value=P[edit][k]??'');$('#f_hot').checked=!!P[edit].hot;const s=P[edit]._img||P[edit].img;if(s){$('#pv').src=s;$('#pv').style.display='block'}}}
+else a.innerHTML=`<div class="bx"><h2>Post Update / News</h2><div class="r"><div><label>Title</label><input id="n_t"></div><div><label>Date</label><input id="n_d" type="date" value="${new Date().toISOString().slice(0,10)}"></div></div><p><button onclick="addN()">Add Update</button></p></div><div class="bx sc"><table>${U.map((u,i)=>`<tr><td>${E(u.date)}</td><td>${E(u.title)}</td><td><button class="d" onclick="U.splice(${i},1);dirty=true;draw()">Delete</button></td></tr>`).join('')}</table></div>`}
+function pick(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{const im=new Image();im.onload=()=>{const s=Math.min(1,600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);pend=c.toDataURL('image/webp',.85);$('#pv').src=pend;$('#pv').style.display='block'};im.src=e.target.result};r.readAsDataURL(f)}
+function savePhone(){const o={};F.forEach(k=>o[k]=$('#f_'+k).value.trim());if(!o.name||!o.brand||!o.price)return msg('Name, brand and price are required');['price','ram','storage'].forEach(k=>o[k]=+o[k]||0);o.hot=$('#f_hot').checked;o.date=o.date||new Date().toISOString().slice(0,10);
+const old=edit>=0?P[edit]:{};o.img=old.img||'';if(old._img)o._img=old._img;if(pend)o._img=pend;
+if(edit>=0)P[edit]=o;else{P.push(o);U.push({title:`${o.brand} ${o.name} added – price ৳${o.price.toLocaleString()}`,date:o.date})}dirty=true;msg('Added. Now click Save & Publish.');tab(1)}
+function ed(i){edit=i;pend='';draw();scrollTo(0,0)}function del(i){if(confirm('Delete this phone?')){P.splice(i,1);dirty=true;draw()}}
+function addN(){const t=$('#n_t').value.trim();if(!t)return;U.push({title:t,date:$('#n_d').value});dirty=true;draw()}
+addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+(async()=>{if(PW){try{await post('login');await load()}catch(e){PW=''}}draw()})();
+</script></body></html>

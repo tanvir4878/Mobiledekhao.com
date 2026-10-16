@@ -70,7 +70,7 @@ footer{background:#120d3d;color:#b9b5e6;text-align:center;padding:30px 16px;marg
 <section class="sec" id="upcoming"><h2>⏳ Upcoming Phones</h2><div class="g" id="upg"></div></section>
 <section class="sec" id="updates"><h2>🔔 Latest Updates</h2><div class="bx" id="ul"></div></section>
 </main>
-<footer>© 2026 MobileDekhao.com · Prices in BDT (৳) and may change · <a href="/admin/">Admin</a></footer>
+<footer>© 2026 MobileDekhao.com · Prices in BDT (৳) and may change · <a href="/admin">Admin</a></footer>
 <div class="m" id="md" onclick="if(event.target==this)this.classList.remove('on')"><div class="mb" id="mb"></div></div>
 <script>
 const $=s=>document.querySelector(s),T=n=>'৳ '+Number(n||0).toLocaleString('en-IN'),E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -79,7 +79,7 @@ const art=`<svg viewBox="0 0 100 160"><rect x="14" y="6" width="72" height="148"
 const pic=p=>p.img?`<img src="${E(p.img)}" alt="${E(p.name)}" loading="lazy">`:art;
 const card=p=>`<div class="c" onclick="D('${E(p.brand+'|'+p.name).replace(/'/g,"&#39;")}')">${p.status!='Available'?`<span class="tg">${E(p.status)}</span>`:''}${p.net=='5G'?'<span class="tg g5">5G</span>':''}${pic(p)}<h3>${E(p.brand)} ${E(p.name)}</h3><div class="pr">${T(p.price)}</div><div class="sm">${p.ram}GB / ${p.storage}GB</div></div>`;
 const brands=()=>[...new Set(P.map(p=>p.brand))].sort();
-async function init(){try{let d=null;try{d=await (await fetch('/api/data')).json()}catch(x){}if(d&&d.init){P=d.phones||[];U=d.updates||[]}else{P=(await (await fetch('data/phones.json')).json()).phones||[];U=(await (await fetch('data/updates.json')).json()).updates||[]}}catch(e){$('#all').innerHTML='<div class="em">Could not load data. Open via Netlify or a local server (not file://).</div>'}
+async function init(){try{let d=null;try{d=await (await fetch('/api/data')).json()}catch(x){}if(d&&d.init){P=d.phones||[];U=d.updates||[]}else{P=(await (await fetch('phones.json')).json()).phones||[];U=(await (await fetch('updates.json')).json()).updates||[]}}catch(e){$('#all').innerHTML='<div class="em">Could not load data. Open via Netlify or a local server (not file://).</div>'}
 $('#s1').textContent=P.length;$('#s2').textContent=brands().length;$('#s3').textContent=U.length;
 $('#brands').innerHTML=brands().map((b,i)=>`<div class="br" onclick="B('${E(b)}')"><i style="background:${cols[i%8]}">${E(b[0])}</i><small>${E(b)}</small></div>`).join('');
 $('#fbr').innerHTML='<option value="">All Brands</option>'+brands().map(b=>`<option>${E(b)}</option>`).join('');
